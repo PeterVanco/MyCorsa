@@ -30,7 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
-            android:text="@string/about_details"
+            android:text="About"
             android:textSize="16sp" />
 
         <Button
@@ -38,14 +38,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dip"
-            android:text="@string/about_play" />
+            android:text="" />
 
         <Button
             android:id="@+id/tutorial"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dip"
-            android:text="@string/about_tutorial"
+            android:text=""
             android:visibility="gone" />
     </LinearLayout>
 

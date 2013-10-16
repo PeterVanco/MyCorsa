@@ -30,6 +30,7 @@ import android.widget.Toast;
 import shared.ui.actionscontentview.ActionsContentView;
 import sk.petervanco.adapter.ActionsAdapter;
 import sk.petervanco.fragment.AboutFragment;
+import sk.petervanco.fragment.ModeFragment;
 import sk.petervanco.fragment.SandboxFragment;
 import sk.petervanco.fragment.WebViewFragment;
 import sk.petervanco.mycorsa.R;
@@ -146,6 +147,14 @@ public class CorsaActivity extends FragmentActivity {
         settingsFragment.setOnSettingsChangedListener(mSettingsChangedListener);
         fragment = settingsFragment;
       }
+    } else if (ModeFragment.MODE_URI.equals(uri)) {
+        tag = ModeFragment.TAG;
+        final ModeFragment foundFragment = (ModeFragment) fm.findFragmentByTag(tag);
+        if (foundFragment != null) {
+          fragment = foundFragment;
+        } else {
+          fragment = new ModeFragment();
+        }
     } else if (uri != null) {
       tag = WebViewFragment.TAG;
       final WebViewFragment webViewFragment;

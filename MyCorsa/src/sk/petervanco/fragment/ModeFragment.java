@@ -15,9 +15,7 @@
  ******************************************************************************/
 package sk.petervanco.fragment;
 
-import sk.petervanco.mycorsa.CorsaActivity;
 import sk.petervanco.mycorsa.R;
-import android.app.Activity;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -29,11 +27,11 @@ public class ModeFragment extends Fragment {
 	
   public static final String 	TAG = ModeFragment.class.getSimpleName();
 
-  private static final String 	ABOUT_SCHEME = "settings";
-  private static final String 	ABOUT_AUTHORITY = "about";
-  public static final Uri 		ABOUT_URI = new Uri.Builder()
-													  .scheme(ABOUT_SCHEME)
-													  .authority(ABOUT_AUTHORITY)
+  private static final String 	MODE_SCHEME = "settings";
+  private static final String 	MODE_AUTHORITY = "mode";
+  public static final Uri 		MODE_URI = new Uri.Builder()
+													  .scheme(MODE_SCHEME)
+													  .authority(MODE_AUTHORITY)
 													  .build();
 
   @Override
