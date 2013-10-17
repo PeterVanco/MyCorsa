@@ -19,17 +19,20 @@ import sk.petervanco.mycorsa.R;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 
-public class ModeFragment extends Fragment {
+public class ModeFragment extends Fragment implements OnClickListener {
 	
   public static final String 	TAG = ModeFragment.class.getSimpleName();
 
   private static final String 	MODE_SCHEME = "settings";
   private static final String 	MODE_AUTHORITY = "mode";
-  public static final Uri 		MODE_URI = new Uri.Builder()
+  public static final  Uri 		MODE_URI = new Uri.Builder()
 													  .scheme(MODE_SCHEME)
 													  .authority(MODE_AUTHORITY)
 													  .build();
@@ -40,6 +43,9 @@ public class ModeFragment extends Fragment {
 
     final View v = inflater.inflate(R.layout.mode, container, false);
 
+    v.findViewById(R.id.btn_connect).setOnClickListener(this);
+    v.findViewById(R.id.btn_mode_solid).setOnClickListener(this);
+    
     /*
     v.findViewById(R.id.play).setOnClickListener(new View.OnClickListener() {
       @Override
@@ -55,4 +61,23 @@ public class ModeFragment extends Fragment {
 
     return v;
   }
+  
+  @Override
+  public void onClick(View v) {
+
+	  switch(v.getId()) {
+          case R.id.btn_connect:
+        	  Log.d(TAG, "Connecting to BCU");
+        	  
+        	  
+        	  
+          break;
+
+          case R.id.btn_mode_solid:
+          // do stuff;
+          break;
+	  }
+
+  }  
+  
 }

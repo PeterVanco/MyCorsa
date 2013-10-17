@@ -1,7 +1,12 @@
 <resources>
 
     <string name="app_name">My Corsa</string>
-
+    
+    <string name="info_disconnected">Odpojené</string>
+    <string name="info_bt_not_enabled_leaving">Bluetooth nebol zapnutý</string>
+    
+    <string name="no_device">Žiadne zariadenie</string>
+    
     <string name="settings_connect"><b>Pripojiť</b> k BCU</string>
     <string name="settings_disconnect"><b>Odpojiť</b> od BCU</string>
     
@@ -46,5 +51,10 @@
     <!-- Effects content strings -->
     <string name="effect_content_actions_xml">Actions effect animation XML</string>
     <string name="effect_content_content_xml">Content effect animation XML</string>
+    <string name="corsa_image">Opel Corsa</string>
+    <string name="bt_discover">Hľadaj</string>
+    <string name="device">Zariadenie</string>
+    <string name="mac_address">MAC adresa</string>
+    <string name="bt_connect">Pripojiť</string>
 
 </resources>
