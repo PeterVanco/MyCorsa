@@ -23,6 +23,7 @@ import sk.petervanco.fragment.SandboxFragment;
 import sk.petervanco.fragment.WebViewFragment;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -34,6 +35,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -48,12 +50,13 @@ public class CorsaActivity extends FragmentActivity {
 
   private ActionsContentView viewActionsContentView;
 
-  private Uri currentUri = ConnectionFragment.ABOUT_URI;
+  private Uri currentUri = ConnectionFragment.CONNECTION_URI;
   private String currentContentFragmentTag = null;
 
   private BluetoothAdapter 	mBluetoothAdapter = null;
   private CorsaService 		mCorsaService = null;
   private StringBuffer 		mOutStringBuffer;
+  private String mConnectedDeviceName = null;
 
   // Key names received from the BluetoothChatService Handler
   public static final String DEVICE_NAME = "device_name";
@@ -70,7 +73,10 @@ public class CorsaActivity extends FragmentActivity {
   public static final int MESSAGE_READ = 2;
   public static final int MESSAGE_WRITE = 3;
   public static final int MESSAGE_DEVICE_NAME = 4;
-  public static final int MESSAGE_TOAST = 5;  
+  public static final int MESSAGE_TOAST = 5;
+  
+  private static final String EXTRA_DEVICE_NAME = "device_name";  
+  private static final String EXTRA_DEVICE_ADDRESS = "device_address";  
   
   
   @Override
@@ -82,7 +88,7 @@ public class CorsaActivity extends FragmentActivity {
     setContentView(R.layout.example);
 
     viewActionsContentView = (ActionsContentView) findViewById(R.id.actionsContentView);
-    viewActionsContentView.setSwipingType(ActionsContentView.SWIPING_EDGE);
+    viewActionsContentView.setSwipingType(ActionsContentView.SWIPING_ALL);
 
     final ListView viewActionsList = (ListView) findViewById(R.id.actions);
     final ActionsAdapter actionsAdapter = new ActionsAdapter(this);
@@ -206,7 +212,7 @@ public class CorsaActivity extends FragmentActivity {
   }  
 
   
-  private void sendMessage(String message) {
+  public void sendMessage(String message) {
       // Check that we're actually connected before trying anything
       if (mCorsaService.getBtState() != CorsaService.BT_STATE_CONNECTED) {
           Toast.makeText(this, R.string.info_disconnected, Toast.LENGTH_SHORT).show();
@@ -228,7 +234,7 @@ public class CorsaActivity extends FragmentActivity {
   private final Handler mHandler = new Handler() {
       @Override
       public void handleMessage(Message msg) {
-          switch (msg.what) {
+		switch (msg.what) {
           case MESSAGE_STATE_CHANGE:
               Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
               /*
@@ -264,12 +270,10 @@ public class CorsaActivity extends FragmentActivity {
               */
               break;
           case MESSAGE_DEVICE_NAME:
-        	  /*
               // save the connected device's name
               mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
               Toast.makeText(getApplicationContext(), "Connected to "
                              + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
-                             */
               break;
           case MESSAGE_TOAST:
               Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
@@ -279,33 +283,10 @@ public class CorsaActivity extends FragmentActivity {
       }
   };  
   
-  private void connectDevice(Intent data, boolean secure) {
-      Log.d(TAG, "Connect intent");
-	  /*
-      // Get the device MAC address
-      String address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-      // Get the BluetoothDevice object
-      BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-      // Attempt to connect to the device
-      */
-      //CorsaService.connect(device, secure);
-  }
   
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
       Log.d(TAG, "onActivityResult " + resultCode);
       switch (requestCode) {
-      case REQUEST_CONNECT_DEVICE_SECURE:
-          // When DeviceListActivity returns with a device to connect
-          if (resultCode == Activity.RESULT_OK) {
-              connectDevice(data, true);
-          }
-          break;
-      case REQUEST_CONNECT_DEVICE_INSECURE:
-          // When DeviceListActivity returns with a device to connect
-          if (resultCode == Activity.RESULT_OK) {
-              connectDevice(data, false);
-          }
-          break;
       case REQUEST_ENABLE_BT:
           // When the request to enable Bluetooth returns
           if (resultCode == Activity.RESULT_OK) {
@@ -323,6 +304,13 @@ public class CorsaActivity extends FragmentActivity {
   
   public void connectRequest(String name, String address) {
 		Toast.makeText(getApplicationContext(), "Connecting to " + name, Toast.LENGTH_SHORT).show();
+        
+//		Intent intent = new Intent();
+//        intent.putExtra(EXTRA_DEVICE_NAME, name);
+//        intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
+
+        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+        mCorsaService.connect(device, false);
   }
   
   
@@ -339,7 +327,7 @@ public class CorsaActivity extends FragmentActivity {
         tr.hide(currentFragment);
     }
 
-    if (ConnectionFragment.ABOUT_URI.equals(uri)) {
+    if (ConnectionFragment.CONNECTION_URI.equals(uri)) {
       tag = ConnectionFragment.TAG;
       final Fragment foundFragment = fm.findFragmentByTag(tag);
       if (foundFragment != null) {

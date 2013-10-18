@@ -56,5 +56,6 @@
     <string name="device">Zariadenie</string>
     <string name="mac_address">MAC adresa</string>
     <string name="bt_connect">Pripojiť</string>
+    <string name="info_discovery">Hľadanie nových zariadení</string>
 
 </resources>

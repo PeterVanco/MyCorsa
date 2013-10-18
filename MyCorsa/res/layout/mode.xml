@@ -11,19 +11,17 @@
         android:orientation="vertical"
         android:padding="8dip" >
 
+	<sk.petervanco.color.ColorPicker
+	    android:id="@+id/picker"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"/>
+	        
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:text="@string/mode_title"
             android:textSize="16sp" />
-
-        <Button
-            android:id="@+id/btn_connect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dip"
-            android:text="@string/settings_connect" />
 
         <Button
             android:id="@+id/btn_mode_solid"
@@ -45,13 +43,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dip"
             android:text="@string/mode_rainbow" />
-        
-        <Button
-            android:id="@+id/btn_disconnect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dip"
-            android:text="@string/settings_disconnect" />
         
    </LinearLayout>
 

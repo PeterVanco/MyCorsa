@@ -30,7 +30,7 @@
     
     <string-array name="actions_links">
         <item>category://settings</item>
-        <item>settings://about</item>
+        <item>settings://connection</item>
         <item>settings://mode</item>
         <item>settings://sandbox</item>
         <item>settings://effects</item>

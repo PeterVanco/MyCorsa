@@ -15,6 +15,7 @@
  ******************************************************************************/
 package sk.petervanco.fragment;
 
+import sk.petervanco.mycorsa.CorsaActivity;
 import sk.petervanco.mycorsa.R;
 import android.net.Uri;
 import android.os.Bundle;
@@ -43,8 +44,10 @@ public class ModeFragment extends Fragment implements OnClickListener {
 
     final View v = inflater.inflate(R.layout.mode, container, false);
 
-    v.findViewById(R.id.btn_connect).setOnClickListener(this);
     v.findViewById(R.id.btn_mode_solid).setOnClickListener(this);
+    v.findViewById(R.id.btn_mode_rainbow).setOnClickListener(this);
+    
+
     
     /*
     v.findViewById(R.id.play).setOnClickListener(new View.OnClickListener() {
@@ -66,10 +69,9 @@ public class ModeFragment extends Fragment implements OnClickListener {
   public void onClick(View v) {
 
 	  switch(v.getId()) {
-          case R.id.btn_connect:
+          case R.id.btn_mode_rainbow:
         	  Log.d(TAG, "Connecting to BCU");
-        	  
-        	  
+        	  ((CorsaActivity)getActivity()).sendMessage("bow\n");
         	  
           break;
 
