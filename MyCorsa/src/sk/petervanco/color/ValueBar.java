@@ -125,6 +125,8 @@ public class ValueBar extends View {
 	 * {@code ColorPicker} instance used to control the ColorPicker.
 	 */
 	private ColorPicker mPicker = null;
+	private OnValueChangedListener onValueChangedListener;
+
 
 	public ValueBar(Context context) {
 		super(context);
@@ -140,6 +142,28 @@ public class ValueBar extends View {
 		super(context, attrs, defStyle);
 		init(attrs, defStyle);
 	}
+	
+	public interface OnValueChangedListener {
+		public void onValueChanged(int color);
+	}
+
+	/**
+	 * Set a onColorChangedListener
+	 * 
+	 * @param {@code OnColorChangedListener}
+	 */
+	public void setOnValueChangedListener(OnValueChangedListener listener) {
+		this.onValueChangedListener = listener;
+	}
+
+	/**
+	 * Gets the onColorChangedListener
+	 * 
+	 * @return {@code OnColorChangedListener}
+	 */
+	public OnValueChangedListener getOnValueChangedListener() {
+		return this.onValueChangedListener;
+	}	
 
 	private void init(AttributeSet attrs, int defStyle) {
 		final TypedArray a = getContext().obtainStyledAttributes(attrs,
@@ -285,6 +309,10 @@ public class ValueBar extends View {
 					if (mPicker != null) {
 						mPicker.setNewCenterColor(mColor);
 						mPicker.changeOpacityBarColor(mColor);
+						
+					}
+					else if (onValueChangedListener != null) {
+						onValueChangedListener.onValueChanged(mColor);
 					}
 					invalidate();
 				} else if (x < mBarPointerHaloRadius) {
@@ -295,6 +323,9 @@ public class ValueBar extends View {
 						mPicker.setNewCenterColor(mColor);
 						mPicker.changeOpacityBarColor(mColor);
 					}
+					else if (onValueChangedListener != null) {
+						onValueChangedListener.onValueChanged(mColor);
+					}
 					invalidate();
 				} else if (x > (mBarPointerHaloRadius + mBarLength)) {
 					mBarPointerPosition = mBarPointerHaloRadius + mBarLength;
@@ -303,6 +334,9 @@ public class ValueBar extends View {
 					if (mPicker != null) {
 						mPicker.setNewCenterColor(mColor);
 						mPicker.changeOpacityBarColor(mColor);
+					}
+					else if (onValueChangedListener != null) {
+						onValueChangedListener.onValueChanged(mColor);
 					}
 					invalidate();
 				}

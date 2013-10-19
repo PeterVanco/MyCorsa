@@ -1,6 +1,6 @@
 <resources>
 
-    <string name="app_name">My Corsa</string>
+    <string name="app_name">Kolotočarina more!</string>
     
     <string name="info_disconnected">Odpojené</string>
     <string name="info_bt_not_enabled_leaving">Bluetooth nebol zapnutý</string>
@@ -57,5 +57,14 @@
     <string name="mac_address">MAC adresa</string>
     <string name="bt_connect">Pripojiť</string>
     <string name="info_discovery">Hľadanie nových zariadení</string>
-
+    <string name="speed_title">Rýchlosť animácie</string>
+    <string name="infoUploadFirmware">Aktualizovať BCU</string>
+    <string name="info_options">Možnosti</string>
+    <string name="info_disable_door_logic">Zakázať</string>
+    <string name="info_enable_door_logic">Povoliť</string>
+    <string name="info_door_logic">Logika odomykania</string>
+    <string name="info_blink_count">Triger odomykania</string>
+    <string name="info_2_blinks">2 zablikania</string>
+    <string name="info_3_blinks">3 zablikania</string>
+    
 </resources>

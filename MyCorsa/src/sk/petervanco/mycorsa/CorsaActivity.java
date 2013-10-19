@@ -15,6 +15,14 @@
  ******************************************************************************/
 package sk.petervanco.mycorsa;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
 import shared.ui.actionscontentview.ActionsContentView;
 import sk.petervanco.adapter.ActionsAdapter;
 import sk.petervanco.fragment.ConnectionFragment;
@@ -24,6 +32,7 @@ import sk.petervanco.fragment.WebViewFragment;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -35,10 +44,11 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import com.ipaulpro.afilechooser.utils.FileUtils;
 
 public class CorsaActivity extends FragmentActivity {
 
@@ -67,6 +77,7 @@ public class CorsaActivity extends FragmentActivity {
   private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
   private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
   private static final int REQUEST_ENABLE_BT = 3;
+  private static final int REQUEST_GET_CONTENT = 4;  
   
   // Message types sent from the CorsaService Handler
   public static final int MESSAGE_STATE_CHANGE = 1;
@@ -76,8 +87,11 @@ public class CorsaActivity extends FragmentActivity {
   public static final int MESSAGE_TOAST = 5;
   
   private static final String EXTRA_DEVICE_NAME = "device_name";  
-  private static final String EXTRA_DEVICE_ADDRESS = "device_address";  
-  
+  private static final String EXTRA_DEVICE_ADDRESS = "device_address";
+  private BlockingQueue<String> mMessageQueue = new ArrayBlockingQueue<String>(64);
+  private int oldActionItemPosition = 0;
+
+  private ActionsAdapter actionsAdapter;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -85,21 +99,21 @@ public class CorsaActivity extends FragmentActivity {
 
     mSettingsChangedListener = new SettingsChangedListener();
 
-    setContentView(R.layout.example);
+    setContentView(R.layout.corsa);
 
     viewActionsContentView = (ActionsContentView) findViewById(R.id.actionsContentView);
     viewActionsContentView.setSwipingType(ActionsContentView.SWIPING_ALL);
 
     final ListView viewActionsList = (ListView) findViewById(R.id.actions);
-    final ActionsAdapter actionsAdapter = new ActionsAdapter(this);
+    actionsAdapter = new ActionsAdapter(this);
     viewActionsList.setAdapter(actionsAdapter);
     viewActionsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
       @Override
       public void onItemClick(AdapterView<?> adapter, View v, int position,
           long flags) {
         final Uri uri = actionsAdapter.getItem(position);
-
-        updateContent(uri);
+        updateContent(oldActionItemPosition - position, uri);
+        oldActionItemPosition = position;
         viewActionsContentView.showContent();
       }
     });
@@ -120,7 +134,7 @@ public class CorsaActivity extends FragmentActivity {
     }
 
     
-    updateContent(currentUri);
+    updateContent(0, currentUri);
   }
 
   @Override
@@ -179,6 +193,17 @@ public class CorsaActivity extends FragmentActivity {
       mOutStringBuffer = new StringBuffer("");  
   }
   
+  public void requestFileLocation() {
+	  Intent target = FileUtils.createGetContentIntent();
+		// Create the chooser Intent
+		Intent intent = Intent.createChooser(target, "Vyberte súbor firmware");
+		try {
+			startActivityForResult(intent, REQUEST_GET_CONTENT);
+		} catch (ActivityNotFoundException e) {
+			// The reason for the existence of aFileChooser
+		}        	  
+  }
+  
   @Override
   public void onStart() {
       super.onStart();
@@ -228,65 +253,58 @@ public class CorsaActivity extends FragmentActivity {
           // Reset out string buffer to zero and clear the edit text field
           mOutStringBuffer.setLength(0);
       }
+      
+      //mMessageQueue.add(message);
   }  
+
   
   // The Handler that gets information back from the BluetoothChatService
-  private final Handler mHandler = new Handler() {
-      @Override
-      public void handleMessage(Message msg) {
-		switch (msg.what) {
-          case MESSAGE_STATE_CHANGE:
-              Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
-              /*
-              switch (msg.arg1) {
-              case BluetoothChatService.STATE_CONNECTED:
-                  setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
-                  mConversationArrayAdapter.clear();
-                  break;
-              case BluetoothChatService.STATE_CONNECTING:
-                  setStatus(R.string.title_connecting);
-                  break;
-              case BluetoothChatService.STATE_LISTEN:
-              case BluetoothChatService.STATE_NONE:
-                  setStatus(R.string.title_not_connected);
-                  break;
-              }
-              */
-              break;
-          case MESSAGE_WRITE:
-        	  /*
-              byte[] writeBuf = (byte[]) msg.obj;
-              // construct a string from the buffer
-              String writeMessage = new String(writeBuf);
-              mConversationArrayAdapter.add("Me:  " + writeMessage);
-              */
-              break;
-          case MESSAGE_READ:
-        	  /*
-              byte[] readBuf = (byte[]) msg.obj;
-              // construct a string from the valid bytes in the buffer
-              String readMessage = new String(readBuf, 0, msg.arg1);
-              mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
-              */
-              break;
-          case MESSAGE_DEVICE_NAME:
-              // save the connected device's name
-              mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
-              Toast.makeText(getApplicationContext(), "Connected to "
-                             + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
-              break;
-          case MESSAGE_TOAST:
-              Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
-                             Toast.LENGTH_SHORT).show();
-              break;
-          }
-      }
-  };  
+  private final Handler mHandler = new HandlerExtension();  
   
+  public static String convertStreamToString(InputStream is) throws Exception {
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+	    StringBuilder sb = new StringBuilder();
+	    String line = null;
+	    while ((line = reader.readLine()) != null) {
+	      sb.append(line).append("\n");
+	    }
+	    return sb.toString();
+	}
+
+	public static String getStringFromFile (String filePath) throws Exception {
+	    File fl = new File(filePath);
+	    FileInputStream fin = new FileInputStream(fl);
+	    String ret = convertStreamToString(fin);
+	    //Make sure you close all streams.
+	    fin.close();        
+	    return ret;
+	}
   
   public void onActivityResult(int requestCode, int resultCode, Intent data) {
       Log.d(TAG, "onActivityResult " + resultCode);
+      Log.d(TAG, "onActivityResult request code: " + requestCode);
       switch (requestCode) {
+		case REQUEST_GET_CONTENT:	
+			// If the file selection was successful
+			if (resultCode == RESULT_OK) {		
+				if (data != null) {
+					// Get the URI of the selected file
+					final Uri uri = data.getData();
+	
+					try {
+						// Create a file instance from the URI
+						final File file = FileUtils.getFile(uri);
+						
+						String content = getStringFromFile(file.getAbsolutePath()).subSequence(0, 30).toString();
+						
+						Log.d(TAG, "File selected");
+						Toast.makeText(this, content, Toast.LENGTH_LONG).show();
+					} catch (Exception e) {
+						Log.e("FileSelectorTestActivity", "File select error", e);
+					}
+				}
+			} 
+		break;
       case REQUEST_ENABLE_BT:
           // When the request to enable Bluetooth returns
           if (resultCode == Activity.RESULT_OK) {
@@ -314,12 +332,16 @@ public class CorsaActivity extends FragmentActivity {
   }
   
   
-  public void updateContent(Uri uri) {
+  public void updateContent(int positionDiff, Uri uri) {
     final Fragment fragment;
     final String tag;
 
     final FragmentManager fm = getSupportFragmentManager();
     final FragmentTransaction tr = fm.beginTransaction();
+    if (positionDiff < 0)
+    	tr.setCustomAnimations(R.anim.slide_up_enter, R.anim.slide_up_exit);
+    else if (positionDiff > 0)
+    	tr.setCustomAnimations(R.anim.slide_down_enter, R.anim.slide_down_exit);
 
     if (!currentUri.equals(uri)) {
       final Fragment currentFragment = fm.findFragmentByTag(currentContentFragmentTag);
@@ -383,7 +405,59 @@ public class CorsaActivity extends FragmentActivity {
     currentContentFragmentTag = tag;
   }
 
-  private class SettingsChangedListener implements SandboxFragment.OnSettingsChangedListener {
+  private final class HandlerExtension extends Handler {
+	@Override
+      public void handleMessage(Message msg) {
+		switch (msg.what) {
+          case MESSAGE_STATE_CHANGE:
+              Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
+              switch (msg.arg1) {
+              case CorsaService.BT_STATE_CONNECTED:
+            	  actionsAdapter.SetVisibilityLevel(R.integer.only_while_connected);
+            	  updateContent(-1, ModeFragment.MODE_URI);
+
+            	  //setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
+                  //mConversationArrayAdapter.clear();
+                  break;
+              case CorsaService.BT_STATE_CONNECTING:
+                  //setStatus(R.string.title_connecting);
+                  break;
+              case CorsaService.BT_STATE_NONE:
+                  //setStatus(R.string.title_not_connected);
+                  break;
+              }
+              break;
+          case MESSAGE_WRITE:
+        	  /*
+              byte[] writeBuf = (byte[]) msg.obj;
+              // construct a string from the buffer
+              String writeMessage = new String(writeBuf);
+              mConversationArrayAdapter.add("Me:  " + writeMessage);
+              */
+              break;
+          case MESSAGE_READ:
+        	  /*
+              byte[] readBuf = (byte[]) msg.obj;
+              // construct a string from the valid bytes in the buffer
+              String readMessage = new String(readBuf, 0, msg.arg1);
+              mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
+              */
+              break;
+          case MESSAGE_DEVICE_NAME:
+              // save the connected device's name
+              mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
+              Toast.makeText(getApplicationContext(), "Connected to "
+                             + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+              break;
+          case MESSAGE_TOAST:
+              Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
+                             Toast.LENGTH_SHORT).show();
+              break;
+          }
+      }
+}
+
+private class SettingsChangedListener implements SandboxFragment.OnSettingsChangedListener {
     private final float mDensity = getResources().getDisplayMetrics().density;
     private final int mAdditionaSpacingWidth = (int) (100 * mDensity);
 

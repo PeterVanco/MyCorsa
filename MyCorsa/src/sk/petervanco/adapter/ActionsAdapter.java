@@ -22,6 +22,7 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,26 +38,64 @@ public class ActionsAdapter extends BaseAdapter {
 
   private final LayoutInflater mInflater;
 
-  private final String[] mTitles;
-  private final String[] mUrls;
-  private final int[] mIcons;
+  private String[] mTitles;
+  private String[] mUrls;
+  private int[]    mIcons;
+  private int	   mVisibilityLevel = 0;
+  private Resources mResources = null;
 
+  private void LoadArrays() {
+	  
+	  	int[] Visiblity;
+	    Visiblity = mResources.getIntArray(R.array.actions_disconnected_visibility);
+	    String[] mTempTitles = mResources.getStringArray(R.array.actions_names);
+	    String[] mTempUrls = mResources.getStringArray(R.array.actions_links);
+	    
+	    final TypedArray iconsArray = mResources.obtainTypedArray(R.array.actions_icons);
+	    final int count = iconsArray.length();
+	    int[] mTempIcons = new int[count];
+	    for (int i = 0; i < count; ++i ) {
+	      mTempIcons[i] = iconsArray.getResourceId(i, 0);
+	    }
+	    iconsArray.recycle();
+	    
+	    int VisibilitySatisfiedElements = 0;
+	    for (int i = 0; i < Visiblity.length; i++) {
+	    	if (Visiblity[i] <= mVisibilityLevel)
+	    		VisibilitySatisfiedElements++;
+	    }
+	    
+	    Log.d("ADAPTER", "Satisfied = " + VisibilitySatisfiedElements);
+	    
+	    mTitles = new String[VisibilitySatisfiedElements];
+	    mUrls = new String[VisibilitySatisfiedElements];
+	    mIcons = new int[VisibilitySatisfiedElements];
+	    
+	    for (int tempi = 0, i = 0; tempi < count; tempi++) {
+	    	if (Visiblity[tempi] <= mVisibilityLevel)
+	    	{
+	    		mTitles[i] = mTempTitles[tempi];
+	    		mUrls[i] = mTempUrls[tempi];
+	  		  	mIcons[i] = mTempIcons[tempi];
+	  		  	i++;
+	    	}
+	    }
+	    
+	  
+  }
+  
   public ActionsAdapter(Context context) {
     mInflater = LayoutInflater.from(context);
-
-    final Resources res = context.getResources();
-    mTitles = res.getStringArray(R.array.actions_names);
-    mUrls = res.getStringArray(R.array.actions_links);
-
-    final TypedArray iconsArray = res.obtainTypedArray(R.array.actions_icons);
-    final int count = iconsArray.length();
-    mIcons = new int[count];
-    for ( int i=0; i<count; ++i ) {
-      mIcons[i] = iconsArray.getResourceId(i, 0);
-    }
-    iconsArray.recycle();
+    mResources = context.getResources();
+    LoadArrays();
   }
 
+  public void SetVisibilityLevel(int Level) {
+	  mVisibilityLevel = Level;
+	  LoadArrays();
+	  this.notifyDataSetChanged();
+  }
+  
   @Override
   public int getCount() {
     return mUrls.length;
@@ -73,7 +112,7 @@ public class ActionsAdapter extends BaseAdapter {
   }
 
   @SuppressLint("DefaultLocale")
-  @Override
+  @Override	
   public View getView(int position, View convertView, ViewGroup parent) {
     final int type = getItemViewType(position);
 
@@ -92,8 +131,10 @@ public class ActionsAdapter extends BaseAdapter {
     }
 
     if (type != VIEW_TYPE_CATEGORY) {
+    	
       final Drawable icon = convertView.getContext().getResources().getDrawable(mIcons[position]);
       icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
+      //icon.setAlpha(0);
       holder.text.setCompoundDrawables(icon, null, null, null);
       holder.text.setText(mTitles[position]);
     } else {
@@ -127,4 +168,5 @@ public class ActionsAdapter extends BaseAdapter {
   private static class ViewHolder {
     TextView text;
   }
+
 }

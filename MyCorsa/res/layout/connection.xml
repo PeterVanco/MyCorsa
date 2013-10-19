@@ -20,10 +20,10 @@
         <Button
             android:id="@+id/btn_bt_discover"
             style="@style/ButtonText"
+            android:background="@drawable/button_blue"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/button_blue"
             android:text="@string/bt_discover" />
 
     </LinearLayout>

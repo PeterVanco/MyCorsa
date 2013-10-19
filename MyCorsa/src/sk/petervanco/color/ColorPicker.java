@@ -284,7 +284,7 @@ public class ColorPicker extends View {
 
 		mPointerHaloPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		mPointerHaloPaint.setColor(Color.BLACK);
-		mPointerHaloPaint.setAlpha(0x50);
+		mPointerHaloPaint.setAlpha(0x40);
 
 		mPointerColor = new Paint(Paint.ANTI_ALIAS_FLAG);
 		mPointerColor.setColor(calculateColor(mAngle));
@@ -299,7 +299,7 @@ public class ColorPicker extends View {
 
 		mCenterHaloPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		mCenterHaloPaint.setColor(Color.BLACK);
-		mCenterHaloPaint.setAlpha(0x00);
+		mPointerHaloPaint.setAlpha(0x40);
 
 	}
 
@@ -530,8 +530,31 @@ public class ColorPicker extends View {
 				invalidate();
 			}
 			// If user did not press pointer or center, report event not handled
-			else{
-				getParent().requestDisallowInterceptTouchEvent(false);
+			else {
+				mAngle = (float) java.lang.Math.atan2(y, x);
+				mPointerColor.setColor(calculateColor(mAngle));
+
+				setNewCenterColor(mCenterNewColor = calculateColor(mAngle));
+
+				if (mOpacityBar != null) {
+					mOpacityBar.setColor(mColor);
+				}
+
+				if (mValueBar != null) {
+					mValueBar.setColor(mColor);
+				}
+
+				if (mSaturationBar != null) {
+					mSaturationBar.setColor(mColor);
+				}
+
+				if (mSVbar != null) {
+					mSVbar.setColor(mColor);
+				}
+
+				invalidate();
+
+				//getParent().requestDisallowInterceptTouchEvent(false);
 				return false;
 			}
 			break;

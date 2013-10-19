@@ -8,41 +8,173 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:padding="8dip" >
+        android:orientation="vertical" >
 
-	<sk.petervanco.color.ColorPicker
-	    android:id="@+id/picker"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"/>
-	        
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
+            android:padding="@dimen/main_padding"
             android:text="@string/mode_title"
-            android:textSize="16sp" />
+            android:textSize="24sp" />
+
+	<LinearLayout
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:orientation="horizontal" 
+	    android:baselineAligned="false">
+
+		<LinearLayout
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:layout_weight="15"
+		    android:gravity="center"
+		    android:orientation="vertical" >
+
+		    <sk.petervanco.color.ColorPicker
+		        android:id="@+id/solid_colorpicker"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content" />
+
+		    <sk.petervanco.color.SVBar
+		        android:id="@+id/solid_svbar"
+		        android:layout_width="wrap_content"
+		        android:layout_height="wrap_content" />
+		</LinearLayout>
+
+		<LinearLayout
+		    android:layout_width="fill_parent"
+		    android:layout_height="match_parent"
+		    android:layout_weight="20"
+		    android:gravity="center"
+		    android:orientation="vertical" >
+
+		    <Button
+		        android:id="@+id/btn_mode_solid"
+		        style="@style/ButtonText"
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginTop="8dip"
+		        android:background="@drawable/button_green"
+		        android:text="@string/mode_solid" />
+
+		    <Button
+		        android:id="@+id/btn_mode_fade"
+		        style="@style/ButtonText"
+            	android:background="@drawable/button_green"
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginTop="8dip"
+		        android:text="@string/mode_fade" />
+
+		    <Button
+		        android:id="@+id/btn_mode_rainbow"
+		        style="@style/ButtonText"
+            	android:background="@drawable/button_green"
+		        android:layout_width="match_parent"
+		        android:layout_height="wrap_content"
+		        android:layout_marginTop="8dip"
+		        android:text="@string/mode_rainbow" />
+		</LinearLayout>
+
+	</LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:padding="@dimen/main_padding"
+            android:text="@string/speed_title"
+            android:textSize="24sp" />
+
+        <sk.petervanco.color.ValueBar
+            android:id="@+id/animSpeed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:padding="@dimen/main_padding"
+            android:text="@string/info_options"
+            android:textSize="24sp" />
+
+        <LinearLayout
+		    android:orientation="horizontal" 
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+			<RadioGroup
+                android:id="@+id/radiogroup_door_logic"
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:layout_weight="1"
+			    android:orientation="vertical"
+			    android:paddingLeft="@dimen/list_padding" >
+
+				<TextView
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:text="@string/info_door_logic" />
+			              
+                <RadioButton
+                    android:id="@+id/radio_enable_door_logic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/info_enable_door_logic" />
+
+                <RadioButton
+                    android:id="@+id/radio_disable_door_logic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/info_disable_door_logic" />
+			</RadioGroup>
+
+			<RadioGroup
+                android:id="@+id/radiogroup_door_trigger"
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:layout_weight="1"
+			    android:orientation="vertical" >
+
+				<TextView
+				    android:id="@+id/info_blink_count"
+				    android:layout_width="wrap_content"
+				    android:layout_height="wrap_content"
+				    android:text="@string/info_blink_count" />
+
+                <RadioButton
+                    android:id="@+id/radio_2_blinks"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/info_2_blinks" />
+
+                <RadioButton
+                    android:id="@+id/radio_3_blinks"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/info_3_blinks" />
+
+			</RadioGroup>
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:padding="@dimen/main_padding"
+            android:text="@string/infoUploadFirmware"
+            android:textSize="24sp" />
 
         <Button
-            android:id="@+id/btn_mode_solid"
-            android:layout_width="wrap_content"
+            android:id="@+id/btn_upload_firmware"
+	        style="@style/ButtonText"
+           	android:background="@drawable/button_red"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dip"
-            android:text="@string/mode_solid" />
-        
-        <Button
-            android:id="@+id/btn_mode_fade"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dip"
-            android:text="@string/mode_fade" />
-        
-        <Button
-            android:id="@+id/btn_mode_rainbow"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dip"
-            android:text="@string/mode_rainbow" />
+            android:text="@string/infoUploadFirmware" />
         
    </LinearLayout>
 
