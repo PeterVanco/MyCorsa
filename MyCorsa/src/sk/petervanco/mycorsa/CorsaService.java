@@ -41,6 +41,7 @@ public class CorsaService extends Service {
     public static final int BT_STATE_NONE = 0;       // we're doing nothing
     public static final int BT_STATE_CONNECTING = 1; // now initiating an outgoing connection
     public static final int BT_STATE_CONNECTED = 2;  // now connected to a remote device	
+    public static final int BT_STATE_DISCONNECTED = 3;  // now connected to a remote device	
 	
     public CorsaService(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -73,6 +74,17 @@ public class CorsaService extends Service {
     public synchronized int getBtState() {
         return mBtState;
     }    
+    
+    public synchronized void disconnect() {
+        if (mBtState == BT_STATE_CONNECTED) {
+            // disconnect
+        	if (mConnectedThread != null) {
+            	mConnectedThread.cancel(); 
+            	mConnectedThread = null;
+            }
+            setBtState(BT_STATE_DISCONNECTED);
+        }
+    }
     
     public synchronized void connect(BluetoothDevice device, boolean secure) {
         Log.d(TAG, "Connect to: " + device);
@@ -146,6 +158,7 @@ public class CorsaService extends Service {
         bundle.putString(CorsaActivity.TOAST, "Device connection was lost");
         msg.setData(bundle);
         mHandler.sendMessage(msg);
+        setBtState(BT_STATE_DISCONNECTED);
 
         // Start the service over to restart listening mode
         CorsaService.this.start();
@@ -168,7 +181,8 @@ public class CorsaService extends Service {
         // Send the name of the connected device back to the UI Activity
         Message msg = mHandler.obtainMessage(CorsaActivity.MESSAGE_DEVICE_NAME);
         Bundle bundle = new Bundle();
-        bundle.putString(CorsaActivity.DEVICE_NAME, device.getName());
+        bundle.putString(CorsaActivity.EXTRA_DEVICE_NAME, device.getName());
+        bundle.putString(CorsaActivity.EXTRA_DEVICE_ADDRESS, device.getAddress());
         msg.setData(bundle);
         mHandler.sendMessage(msg);
 

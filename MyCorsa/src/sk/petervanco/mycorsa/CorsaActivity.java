@@ -26,6 +26,7 @@ import java.util.concurrent.BlockingQueue;
 import shared.ui.actionscontentview.ActionsContentView;
 import sk.petervanco.adapter.ActionsAdapter;
 import sk.petervanco.fragment.ConnectionFragment;
+import sk.petervanco.fragment.DisconnectionFragment;
 import sk.petervanco.fragment.ModeFragment;
 import sk.petervanco.fragment.SandboxFragment;
 import sk.petervanco.fragment.WebViewFragment;
@@ -48,6 +49,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.haarman.listviewanimations.swinginadapters.prepared.SwingRightInAnimationAdapter;
 import com.ipaulpro.afilechooser.utils.FileUtils;
 
 public class CorsaActivity extends FragmentActivity {
@@ -66,7 +68,8 @@ public class CorsaActivity extends FragmentActivity {
   private BluetoothAdapter 	mBluetoothAdapter = null;
   private CorsaService 		mCorsaService = null;
   private StringBuffer 		mOutStringBuffer;
-  private String mConnectedDeviceName = null;
+  private String 			mConnectedDeviceName = null;
+  private String 			mConnectedDeviceAddress = null;
 
   // Key names received from the BluetoothChatService Handler
   public static final String DEVICE_NAME = "device_name";
@@ -86,10 +89,9 @@ public class CorsaActivity extends FragmentActivity {
   public static final int MESSAGE_DEVICE_NAME = 4;
   public static final int MESSAGE_TOAST = 5;
   
-  private static final String EXTRA_DEVICE_NAME = "device_name";  
-  private static final String EXTRA_DEVICE_ADDRESS = "device_address";
+  public static final String EXTRA_DEVICE_NAME = "device_name";  
+  public static final String EXTRA_DEVICE_ADDRESS = "device_address";
   private BlockingQueue<String> mMessageQueue = new ArrayBlockingQueue<String>(64);
-  private int oldActionItemPosition = 0;
 
   private ActionsAdapter actionsAdapter;
   
@@ -104,16 +106,21 @@ public class CorsaActivity extends FragmentActivity {
     viewActionsContentView = (ActionsContentView) findViewById(R.id.actionsContentView);
     viewActionsContentView.setSwipingType(ActionsContentView.SWIPING_ALL);
 
+    
+    
     final ListView viewActionsList = (ListView) findViewById(R.id.actions);
     actionsAdapter = new ActionsAdapter(this);
-    viewActionsList.setAdapter(actionsAdapter);
+    actionsAdapter.SetVisibilityLevel(getResources().getInteger(R.integer.show_everytime));
+    SwingRightInAnimationAdapter swingRightInAnimationAdapter = new SwingRightInAnimationAdapter(actionsAdapter);
+    swingRightInAnimationAdapter.setAbsListView(viewActionsList);
+    viewActionsList.setAdapter(swingRightInAnimationAdapter);
+    //viewActionsList.setAdapter(actionsAdapter);
     viewActionsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
       @Override
       public void onItemClick(AdapterView<?> adapter, View v, int position,
           long flags) {
         final Uri uri = actionsAdapter.getItem(position);
-        updateContent(oldActionItemPosition - position, uri);
-        oldActionItemPosition = position;
+        updateContent(uri);
         viewActionsContentView.showContent();
       }
     });
@@ -134,10 +141,18 @@ public class CorsaActivity extends FragmentActivity {
     }
 
     
-    updateContent(0, currentUri);
+    updateContent(currentUri);
   }
 
-  @Override
+  public String getConnectedDeviceName() {
+	return mConnectedDeviceName;
+}
+
+public String getConnectedDeviceAddress() {
+	return mConnectedDeviceAddress;
+}
+
+@Override
   public void onBackPressed() {
     final Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentContentFragmentTag);
     if (currentFragment instanceof WebViewFragment) {
@@ -202,6 +217,12 @@ public class CorsaActivity extends FragmentActivity {
 		} catch (ActivityNotFoundException e) {
 			// The reason for the existence of aFileChooser
 		}        	  
+  }
+  
+  public void disconnectBluetooth()
+  {
+	  mCorsaService.disconnect();
+	  
   }
   
   @Override
@@ -332,15 +353,18 @@ public class CorsaActivity extends FragmentActivity {
   }
   
   
-  public void updateContent(int positionDiff, Uri uri) {
+  public void updateContent(Uri uri) {
     final Fragment fragment;
     final String tag;
 
     final FragmentManager fm = getSupportFragmentManager();
     final FragmentTransaction tr = fm.beginTransaction();
-    if (positionDiff < 0)
+
+    int positionDiff = actionsAdapter.getItemPosition(uri) - actionsAdapter.getItemPosition(currentUri);
+    Log.d(TAG, actionsAdapter.getItemPosition(uri) + " POS " +actionsAdapter.getItemPosition(currentUri));
+    if (positionDiff > 0)
     	tr.setCustomAnimations(R.anim.slide_up_enter, R.anim.slide_up_exit);
-    else if (positionDiff > 0)
+    else if (positionDiff < 0)
     	tr.setCustomAnimations(R.anim.slide_down_enter, R.anim.slide_down_exit);
 
     if (!currentUri.equals(uri)) {
@@ -349,15 +373,26 @@ public class CorsaActivity extends FragmentActivity {
         tr.hide(currentFragment);
     }
 
+    if (mCorsaService != null) {
+        if (ConnectionFragment.CONNECTION_URI.equals(uri) && mCorsaService.getBtState() == CorsaService.BT_STATE_CONNECTED)
+        	uri = DisconnectionFragment.DISCONNECTION_URI;
+    }
+    
     if (ConnectionFragment.CONNECTION_URI.equals(uri)) {
-      tag = ConnectionFragment.TAG;
+        tag = ConnectionFragment.TAG;
+        final Fragment foundFragment = fm.findFragmentByTag(tag);
+        if (foundFragment != null) {
+          fragment = foundFragment;
+        } else {
+          fragment = new ConnectionFragment();
+        }
+      } else if (DisconnectionFragment.DISCONNECTION_URI.equals(uri)) {
+      tag = DisconnectionFragment.TAG;
       final Fragment foundFragment = fm.findFragmentByTag(tag);
       if (foundFragment != null) {
         fragment = foundFragment;
-        Toast.makeText(getApplicationContext(), "Ahoj", Toast.LENGTH_SHORT).show();
       } else {
-        Toast.makeText(getApplicationContext(), "Cau", Toast.LENGTH_SHORT).show();
-        fragment = new ConnectionFragment();
+        fragment = new DisconnectionFragment();
       }
     } else if (SandboxFragment.SETTINGS_URI.equals(uri)) {
       tag = SandboxFragment.TAG;
@@ -413,8 +448,8 @@ public class CorsaActivity extends FragmentActivity {
               Log.i(TAG, "MESSAGE_STATE_CHANGE: " + msg.arg1);
               switch (msg.arg1) {
               case CorsaService.BT_STATE_CONNECTED:
-            	  actionsAdapter.SetVisibilityLevel(R.integer.only_while_connected);
-            	  updateContent(-1, ModeFragment.MODE_URI);
+            	  actionsAdapter.SetVisibilityLevel(getResources().getInteger(R.integer.only_while_connected));
+            	  updateContent(ModeFragment.MODE_URI);
 
             	  //setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
                   //mConversationArrayAdapter.clear();
@@ -423,8 +458,11 @@ public class CorsaActivity extends FragmentActivity {
                   //setStatus(R.string.title_connecting);
                   break;
               case CorsaService.BT_STATE_NONE:
-                  //setStatus(R.string.title_not_connected);
-                  break;
+            	  break;
+              case CorsaService.BT_STATE_DISCONNECTED:
+            	  actionsAdapter.SetVisibilityLevel(getResources().getInteger(R.integer.show_everytime));
+            	  updateContent(ConnectionFragment.CONNECTION_URI);
+            	  break;
               }
               break;
           case MESSAGE_WRITE:
@@ -445,7 +483,8 @@ public class CorsaActivity extends FragmentActivity {
               break;
           case MESSAGE_DEVICE_NAME:
               // save the connected device's name
-              mConnectedDeviceName = msg.getData().getString(DEVICE_NAME);
+              mConnectedDeviceName = msg.getData().getString(EXTRA_DEVICE_NAME);
+              mConnectedDeviceAddress = msg.getData().getString(EXTRA_DEVICE_ADDRESS);
               Toast.makeText(getApplicationContext(), "Connected to "
                              + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
               break;

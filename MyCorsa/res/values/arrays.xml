@@ -16,15 +16,15 @@
     </array>
 
     <integer-array name="actions_disconnected_visibility">
-        <item>@integer/everytime</item>
-        <item>@integer/everytime</item>
+        <item>@integer/show_everytime</item>
+        <item>@integer/show_everytime</item>
         <item>@integer/only_while_connected</item>
         <item>@integer/only_while_connected</item>
         <item>@integer/only_while_connected</item>
-        <item>@integer/everytime</item>
+        <item>@integer/show_everytime</item>
         <item>@integer/only_while_connected</item>
         <item>@integer/only_while_connected</item>
-        <item>@integer/everytime</item>
+        <item>@integer/show_everytime</item>
         <item>@integer/only_while_connected</item>
     </integer-array>
     

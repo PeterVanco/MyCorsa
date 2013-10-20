@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ActionsAdapter extends BaseAdapter {
 
@@ -65,7 +66,7 @@ public class ActionsAdapter extends BaseAdapter {
 	    		VisibilitySatisfiedElements++;
 	    }
 	    
-	    Log.d("ADAPTER", "Satisfied = " + VisibilitySatisfiedElements);
+	    Log.d("ADAPTER", "Satisfied = " + VisibilitySatisfiedElements + " to level " + mVisibilityLevel);
 	    
 	    mTitles = new String[VisibilitySatisfiedElements];
 	    mUrls = new String[VisibilitySatisfiedElements];
@@ -101,6 +102,17 @@ public class ActionsAdapter extends BaseAdapter {
     return mUrls.length;
   }
 
+  public int getItemPosition(Uri u) {
+
+	  
+	int count = this.getCount();
+	for (int i = 0; i < count; i++) {
+		if (mUrls[i].toString().equals(u.toString()))
+			return i;
+	}	  
+	return -1;
+  }
+  
   @Override
   public Uri getItem(int position) {
     return Uri.parse(mUrls[position]);

@@ -25,6 +25,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.haarman.listviewanimations.swinginadapters.prepared.SwingBottomInAnimationAdapter;
+
 public class ConnectionFragment extends Fragment implements OnClickListener{
   
   public static final String TAG = ConnectionFragment.class.getSimpleName();
@@ -93,7 +95,11 @@ public class ConnectionFragment extends Fragment implements OnClickListener{
 
     mBtListAdapter = new BtListAdapter(getActivity(), mPairedDevices);
     ListView mBtDevicesList = (ListView) v.findViewById(R.id.bt_devices);
-    mBtDevicesList.setAdapter(mBtListAdapter);
+    
+    SwingBottomInAnimationAdapter swingBottomInAnimationAdapter = new SwingBottomInAnimationAdapter(mBtListAdapter);
+    swingBottomInAnimationAdapter.setAbsListView(mBtDevicesList);
+    mBtDevicesList.setAdapter(swingBottomInAnimationAdapter);
+    //mBtDevicesList.setAdapter(mBtListAdapter);
     mBtDevicesList.setOnItemClickListener(new OnItemClickListener() {
     	 
 		@Override
@@ -147,7 +153,6 @@ public class ConnectionFragment extends Fragment implements OnClickListener{
               }
           // When discovery is finished, change the Activity title
           } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-              getActivity().setProgressBarIndeterminateVisibility(false);
               getActivity().setTitle(R.string.app_name);
 //              if (mNewDevicesArrayAdapter.getCount() == 0) {
 //                  String noDevices = getResources().getText(R.string.none_found).toString();

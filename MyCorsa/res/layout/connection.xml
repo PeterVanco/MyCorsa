@@ -30,10 +30,9 @@
 
     <ListView
         android:id="@+id/bt_devices"
+        android:divider="@android:color/white"
         android:layout_width="match_parent"
         android:layout_height="fill_parent" 
-        android:divider="#b5b5b5"
-        android:dividerHeight="1dp"
         android:listSelector="@drawable/list_selector">
     </ListView>
 

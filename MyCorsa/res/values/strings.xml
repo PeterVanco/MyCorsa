@@ -1,6 +1,6 @@
 <resources>
 
-    <string name="app_name">Kolotočarina more!</string>
+    <string name="app_name">Kolotočárina</string>
     
     <string name="info_disconnected">Odpojené</string>
     <string name="info_bt_not_enabled_leaving">Bluetooth nebol zapnutý</string>
@@ -66,5 +66,8 @@
     <string name="info_blink_count">Triger odomykania</string>
     <string name="info_2_blinks">2 zablikania</string>
     <string name="info_3_blinks">3 zablikania</string>
+    <string name="info_bt_disconnect">Odpojiť</string>
+    <string name="info_disconnection_bt_name">Názov</string>
+    <string name="remember_connection">Zapamatať pripojenie</string>
     
 </resources>
