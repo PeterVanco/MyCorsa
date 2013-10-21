@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -30,6 +31,7 @@ import sk.petervanco.fragment.DisconnectionFragment;
 import sk.petervanco.fragment.ModeFragment;
 import sk.petervanco.fragment.SandboxFragment;
 import sk.petervanco.fragment.WebViewFragment;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -117,8 +119,7 @@ public class CorsaActivity extends FragmentActivity {
     //viewActionsList.setAdapter(actionsAdapter);
     viewActionsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
       @Override
-      public void onItemClick(AdapterView<?> adapter, View v, int position,
-          long flags) {
+      public void onItemClick(AdapterView<?> adapter, View v, int position, long flags) {
         final Uri uri = actionsAdapter.getItem(position);
         updateContent(uri);
         viewActionsContentView.showContent();
@@ -130,7 +131,6 @@ public class CorsaActivity extends FragmentActivity {
       currentContentFragmentTag = savedInstanceState.getString(STATE_FRAGMENT_TAG);
     }
 
-    
     mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
     // If the adapter is null, then Bluetooth is not supported
@@ -282,26 +282,9 @@ public String getConnectedDeviceAddress() {
   // The Handler that gets information back from the BluetoothChatService
   private final Handler mHandler = new HandlerExtension();  
   
-  public static String convertStreamToString(InputStream is) throws Exception {
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-	    StringBuilder sb = new StringBuilder();
-	    String line = null;
-	    while ((line = reader.readLine()) != null) {
-	      sb.append(line).append("\n");
-	    }
-	    return sb.toString();
-	}
 
-	public static String getStringFromFile (String filePath) throws Exception {
-	    File fl = new File(filePath);
-	    FileInputStream fin = new FileInputStream(fl);
-	    String ret = convertStreamToString(fin);
-	    //Make sure you close all streams.
-	    fin.close();        
-	    return ret;
-	}
   
-  public void onActivityResult(int requestCode, int resultCode, Intent data) {
+public void onActivityResult(int requestCode, int resultCode, Intent data) {
       Log.d(TAG, "onActivityResult " + resultCode);
       Log.d(TAG, "onActivityResult request code: " + requestCode);
       switch (requestCode) {
@@ -315,11 +298,13 @@ public String getConnectedDeviceAddress() {
 					try {
 						// Create a file instance from the URI
 						final File file = FileUtils.getFile(uri);
+						final String filePath = file.getAbsolutePath();
 						
-						String content = getStringFromFile(file.getAbsolutePath()).subSequence(0, 30).toString();
-						
-						Log.d(TAG, "File selected");
-						Toast.makeText(this, content, Toast.LENGTH_LONG).show();
+						if (filePath.toLowerCase(Locale.US).endsWith(".hex"))
+							mCorsaService.startUpgradeFirmware(file.getAbsolutePath());
+						else
+							Log.d(TAG, "Filetype must be a firmware image");
+						//Toast.makeText(this, content, Toast.LENGTH_LONG).show();
 					} catch (Exception e) {
 						Log.e("FileSelectorTestActivity", "File select error", e);
 					}
@@ -485,8 +470,7 @@ public String getConnectedDeviceAddress() {
               // save the connected device's name
               mConnectedDeviceName = msg.getData().getString(EXTRA_DEVICE_NAME);
               mConnectedDeviceAddress = msg.getData().getString(EXTRA_DEVICE_ADDRESS);
-              Toast.makeText(getApplicationContext(), "Connected to "
-                             + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+              Toast.makeText(getApplicationContext(), "Connected to " + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
               break;
           case MESSAGE_TOAST:
               Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
