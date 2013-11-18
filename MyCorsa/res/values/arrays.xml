@@ -37,7 +37,7 @@
         <item>@string/action_bookmarks</item>
         <item>Dropbox</item>
         <item>Evernote</item>
-        <item>Facebook</item>
+        <item>Firmware</item>
         <item>GitHub</item>
     </string-array>
     
@@ -50,7 +50,7 @@
         <item>category://bookmarks</item>
         <item>http://www.dropbox.com</item>
         <item>http://www.evernote.com</item>
-        <item>http://www.facebook.com</item>
+        <item>settings://firmware</item>
         <item>http://www.github.com</item>
     </string-array>
     

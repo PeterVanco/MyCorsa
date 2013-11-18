@@ -15,11 +15,7 @@
  ******************************************************************************/
 package sk.petervanco.mycorsa;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Locale;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -28,14 +24,17 @@ import shared.ui.actionscontentview.ActionsContentView;
 import sk.petervanco.adapter.ActionsAdapter;
 import sk.petervanco.fragment.ConnectionFragment;
 import sk.petervanco.fragment.DisconnectionFragment;
+import sk.petervanco.fragment.FirmwareFragment;
 import sk.petervanco.fragment.ModeFragment;
 import sk.petervanco.fragment.SandboxFragment;
 import sk.petervanco.fragment.WebViewFragment;
-import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -45,6 +44,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -90,12 +90,22 @@ public class CorsaActivity extends FragmentActivity {
   public static final int MESSAGE_WRITE = 3;
   public static final int MESSAGE_DEVICE_NAME = 4;
   public static final int MESSAGE_TOAST = 5;
+  public static final int MESSAGE_DFU_BEGIN = 6;
+  public static final int MESSAGE_DFU_PROGRESS = 7;
+  public static final int MESSAGE_DFU_END = 8;
+  public static final int MESSAGE_DFU_FAILED = 9;
   
   public static final String EXTRA_DEVICE_NAME = "device_name";  
   public static final String EXTRA_DEVICE_ADDRESS = "device_address";
   private BlockingQueue<String> mMessageQueue = new ArrayBlockingQueue<String>(64);
 
   private ActionsAdapter actionsAdapter;
+  private NotificationManager mNotifyManager = null;
+  private NotificationCompat.Builder mBuilder = null;
+
+  public CorsaService getBindedService() {
+	  return mCorsaService;
+  }
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -108,7 +118,13 @@ public class CorsaActivity extends FragmentActivity {
     viewActionsContentView = (ActionsContentView) findViewById(R.id.actionsContentView);
     viewActionsContentView.setSwipingType(ActionsContentView.SWIPING_ALL);
 
-    
+	mNotifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+	mBuilder = new NotificationCompat.Builder(this);
+	Intent notificationIntent = new Intent(getApplicationContext(), CorsaActivity.class);
+    notificationIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP );
+    PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    mBuilder.setContentIntent(pendingIntent);
+	
     
     final ListView viewActionsList = (ListView) findViewById(R.id.actions);
     actionsAdapter = new ActionsAdapter(this);
@@ -150,6 +166,10 @@ public class CorsaActivity extends FragmentActivity {
 
 public String getConnectedDeviceAddress() {
 	return mConnectedDeviceAddress;
+}
+
+public void callStartDFU(String filename) {
+	mCorsaService.startUpgradeFirmware(filename);
 }
 
 @Override
@@ -229,7 +249,7 @@ public String getConnectedDeviceAddress() {
   public void onStart() {
       super.onStart();
       Log.d(TAG, "OnStart");
-
+      
       if (!mBluetoothAdapter.isEnabled()) {
           Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
           startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
@@ -301,7 +321,13 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 						final String filePath = file.getAbsolutePath();
 						
 						if (filePath.toLowerCase(Locale.US).endsWith(".hex"))
-							mCorsaService.startUpgradeFirmware(file.getAbsolutePath());
+						{
+							Fragment actualFragment = getSupportFragmentManager().findFragmentByTag(currentContentFragmentTag);
+							if (FirmwareFragment.class.equals(actualFragment.getClass()))
+							{
+								((FirmwareFragment) actualFragment).SetFirmwareFilename(file);
+							}
+						}
 						else
 							Log.d(TAG, "Filetype must be a firmware image");
 						//Toast.makeText(this, content, Toast.LENGTH_LONG).show();
@@ -379,37 +405,45 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
       } else {
         fragment = new DisconnectionFragment();
       }
-    } else if (SandboxFragment.SETTINGS_URI.equals(uri)) {
-      tag = SandboxFragment.TAG;
-      final SandboxFragment foundFragment = (SandboxFragment) fm.findFragmentByTag(tag);
-      if (foundFragment != null) {
-        foundFragment.setOnSettingsChangedListener(mSettingsChangedListener);
-        fragment = foundFragment;
-      } else {
-        final SandboxFragment settingsFragment = new SandboxFragment();
-        settingsFragment.setOnSettingsChangedListener(mSettingsChangedListener);
-        fragment = settingsFragment;
-      }
-    } else if (ModeFragment.MODE_URI.equals(uri)) {
-        tag = ModeFragment.TAG;
-        final ModeFragment foundFragment = (ModeFragment) fm.findFragmentByTag(tag);
+    } else if (FirmwareFragment.FIRMWARE_URI.equals(uri)) {
+        tag = FirmwareFragment.TAG;
+        final FirmwareFragment foundFragment = (FirmwareFragment) fm.findFragmentByTag(tag);
         if (foundFragment != null) {
           fragment = foundFragment;
         } else {
-          fragment = new ModeFragment();
+          fragment = new FirmwareFragment();
         }
+      } else if (SandboxFragment.SETTINGS_URI.equals(uri)) {
+	      tag = SandboxFragment.TAG;
+	      final SandboxFragment foundFragment = (SandboxFragment) fm.findFragmentByTag(tag);
+	      if (foundFragment != null) {
+	        foundFragment.setOnSettingsChangedListener(mSettingsChangedListener);
+	        fragment = foundFragment;
+	      } else {
+	        final SandboxFragment settingsFragment = new SandboxFragment();
+	        settingsFragment.setOnSettingsChangedListener(mSettingsChangedListener);
+	        fragment = settingsFragment;
+	      }
+    } else if (ModeFragment.MODE_URI.equals(uri)) {
+		tag = ModeFragment.TAG;
+		final ModeFragment foundFragment = (ModeFragment) fm.findFragmentByTag(tag);
+		if (foundFragment != null) {
+		  fragment = foundFragment;
+		} else {
+		  fragment = new ModeFragment();
+		}
     } else if (uri != null) {
-      tag = WebViewFragment.TAG;
-      final WebViewFragment webViewFragment;
-      final Fragment foundFragment = fm.findFragmentByTag(tag);
-      if (foundFragment != null) {
-        fragment = foundFragment;
-        webViewFragment = (WebViewFragment) fragment;
-      } else {
-        webViewFragment = new WebViewFragment();
-        fragment = webViewFragment;
-      }
-      webViewFragment.setUrl(uri.toString());
+        tag = WebViewFragment.TAG;
+	  final WebViewFragment webViewFragment;
+	  final Fragment foundFragment = fm.findFragmentByTag(tag);
+	  if (foundFragment != null) {
+	    fragment = foundFragment;
+	    webViewFragment = (WebViewFragment) fragment;
+	  } else {
+	    webViewFragment = new WebViewFragment();
+	    fragment = webViewFragment;
+	  }
+	  webViewFragment.setUrl(uri.toString());
     } else {
       return;
     }
@@ -425,6 +459,7 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
     currentContentFragmentTag = tag;
   }
 
+  
   private final class HandlerExtension extends Handler {
 	@Override
       public void handleMessage(Message msg) {
@@ -459,12 +494,10 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
               */
               break;
           case MESSAGE_READ:
-        	  /*
               byte[] readBuf = (byte[]) msg.obj;
               // construct a string from the valid bytes in the buffer
               String readMessage = new String(readBuf, 0, msg.arg1);
-              mConversationArrayAdapter.add(mConnectedDeviceName+":  " + readMessage);
-              */
+
               break;
           case MESSAGE_DEVICE_NAME:
               // save the connected device's name
@@ -476,6 +509,37 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
               Toast.makeText(getApplicationContext(), msg.getData().getString(TOAST),
                              Toast.LENGTH_SHORT).show();
               break;
+          case MESSAGE_DFU_BEGIN:
+        		mBuilder.setContentTitle("Firmware update")
+        	    	    .setContentText("Waiting for start")
+        	    	    .setSmallIcon(R.drawable.ic_launcher)
+        				.setProgress(100, 0, false);
+
+        		mNotifyManager.notify(0, mBuilder.build()); 	
+        	  break;
+          case MESSAGE_DFU_PROGRESS:
+	      		mBuilder.setContentTitle("Firmware update")
+		    	    .setContentText("Update in progress")
+		    	    .setSmallIcon(R.drawable.ic_launcher)
+					.setProgress(msg.arg1, msg.arg2, false);
+	      		Log.d("DFU", "Progress " + msg.arg1 + " / " + msg.arg2);
+	      		mNotifyManager.notify(0, mBuilder.build()); 	
+        	  break;
+          case MESSAGE_DFU_END:
+	      		mBuilder.setContentTitle("Firmware update done")
+	      				.setContentText("")
+	      				.setSmallIcon(R.drawable.ic_launcher)
+	      				.setProgress(0, 0, false);
+	      		mNotifyManager.notify(0, mBuilder.build()); 
+	      		disconnectBluetooth();
+        	  break;
+          case MESSAGE_DFU_FAILED:
+	      		mBuilder.setContentTitle("Firmware update failed")
+	      				.setContentText("Device timeouted, please try again")
+	      				.setSmallIcon(R.drawable.ic_launcher)
+	      				.setProgress(0, 0, false);
+	      		mNotifyManager.notify(0, mBuilder.build());
+        	  break;
           }
       }
 }

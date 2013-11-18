@@ -159,22 +159,6 @@
 			</RadioGroup>
 
         </LinearLayout>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:padding="@dimen/main_padding"
-            android:text="@string/infoUploadFirmware"
-            android:textSize="24sp" />
-
-        <Button
-            android:id="@+id/btn_upload_firmware"
-	        style="@style/ButtonText"
-           	android:background="@drawable/button_red"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/infoUploadFirmware" />
         
    </LinearLayout>
 

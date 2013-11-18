@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.UUID;
 
+import android.app.NotificationManager;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -19,7 +20,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 public class CorsaService extends Service {
 
@@ -40,19 +43,24 @@ public class CorsaService extends Service {
     private int mBtState;
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
-
+    private Boolean mDfuInProgress = false;
+    private String[] mHexRecords;
+    private int mHexRecordsPtr = 0;
+    private String mBuffer = "";
+    
     // Constants that indicate the current connection state
     public static final int BT_STATE_NONE = 0;       // we're doing nothing
     public static final int BT_STATE_CONNECTING = 1; // now initiating an outgoing connection
     public static final int BT_STATE_CONNECTED = 2;  // now connected to a remote device	
     public static final int BT_STATE_DISCONNECTED = 3;  // now connected to a remote device	
+
+	private static final long DFU_TIMEOUT = 5000;
 	
     public CorsaService(Context context, Handler handler) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mBtState = BT_STATE_NONE;
         mHandler = handler;
-
-		Log.d(TAG, "Service constructor");
+        Log.d(TAG, "Service constructor");
     }
     
 	@Override
@@ -87,12 +95,122 @@ public class CorsaService extends Service {
 	    return ret;
 	}
 	
+	private void continueDfu() {
+		Log.d("DFU", mHexRecordsPtr + " / " + (mHexRecords.length - 1));
+		
+		if (mHexRecordsPtr <= mHexRecords.length) {
+			int i;
+			String feed = "";
+			for (i = 0; i < 5; i++) {
+				feed += mHexRecords[mHexRecordsPtr + i];// + "\n";
+				if (mHexRecordsPtr + i + 1 == mHexRecords.length) {
+					feed += "#EOF\n";
+					break;
+				}
+			}
+			feed += "\n";
+			Log.d("DFU", "Sending: " + feed);
+			
+//			try {
+//				Thread.sleep(250);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+			
+			write(feed.getBytes());
+
+			Message msg = mHandler.obtainMessage(CorsaActivity.MESSAGE_DFU_PROGRESS, (mHexRecords.length - 1), mHexRecordsPtr);
+	        mHandler.sendMessage(msg);			
+            
+			timeoutHandler.removeCallbacks(timeoutRunnable);
+			timeoutHandler.postDelayed(timeoutRunnable, DFU_TIMEOUT);
+		}
+	}
+	
+    Handler timeoutHandler = new Handler();
+    Runnable timeoutRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+
+	        Message msg = mHandler.obtainMessage(CorsaActivity.MESSAGE_DFU_FAILED);
+	        mHandler.sendMessage(msg);
+//        	Toast.makeText(mContext, "Firmware update failed", Toast.LENGTH_SHORT).show();
+			Log.d("DFU", "(failed)");
+        	mDfuInProgress = false;
+        }
+    };
+	
+	private synchronized void parseDfuMessage(String s) {
+        
+		mBuffer += s;
+		
+		
+		while (true)
+		{
+			Log.d("DFU", "(rec) " + mBuffer);
+
+			if (mBuffer.startsWith("#OK\n")) {
+				mBuffer = mBuffer.substring(mBuffer.indexOf("\n") + 1);
+				mHexRecordsPtr += 5;
+				Log.d("DFU", "OK call");
+				continueDfu();
+			}
+			else if (mBuffer.startsWith("#RESEND\n")) {
+				mBuffer = mBuffer.substring(mBuffer.indexOf("\n") + 1);
+				Toast.makeText(this, "RESEND", Toast.LENGTH_SHORT).show();
+				Log.d("DFU", "#RESEND");
+				Log.d("DFU", "RESEND call");
+				continueDfu();
+			}
+	        else if (mBuffer.startsWith("#DFU-WAIT\n")) {
+	        	mBuffer = mBuffer.substring(mBuffer.indexOf("\n") + 1);
+				Log.d("DFU", "#DFU-WAIT");
+				timeoutHandler.removeCallbacks(timeoutRunnable);
+				timeoutHandler.postDelayed(timeoutRunnable, DFU_TIMEOUT);
+	        }
+	        else if (mBuffer.startsWith("#EOF-OK\n")) {
+	        	mBuffer = mBuffer.substring(mBuffer.indexOf("\n") + 1);
+				Log.d("DFU", "#EOF-OK");
+				timeoutHandler.removeCallbacks(timeoutRunnable);
+				
+		        Message msg = mHandler.obtainMessage(CorsaActivity.MESSAGE_DFU_END);
+		        mHandler.sendMessage(msg);
+			
+				mDfuInProgress = false;
+	        }
+	        else if (mBuffer.startsWith("#START\n")) {
+	        	mBuffer = mBuffer.substring(mBuffer.indexOf("\n") + 1);
+				Log.d("DFU", "#DFU-READY");
+				Log.d("DFU", "READY call");
+				continueDfu();
+	        }
+	        else
+	        {
+	        	break;
+	        }
+		}
+	}
+	
+	
     public synchronized void startUpgradeFirmware(String filePath) {
+    	
 		try {
-			String content = getStringFromFile(filePath).subSequence(0, 30).toString();
+			Log.d("DFU", "File: " + filePath);
+			String content = getStringFromFile(filePath);
+			Log.d("DFU", "Content: " + content.substring(0,30).toString());
+			mHexRecords = content.split("\n");
+			Log.d("DFU", "Record: " + mHexRecords[0]);
+			mHexRecordsPtr = 0;
+			mDfuInProgress = true;
+			mBuffer = "";
 			write("#DFU\n".getBytes());		
 			
+	        Message msg = mHandler.obtainMessage(CorsaActivity.MESSAGE_DFU_BEGIN);
+	        mHandler.sendMessage(msg);
 			
+			timeoutHandler.postDelayed(timeoutRunnable, DFU_TIMEOUT);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -332,8 +450,14 @@ public class CorsaService extends Service {
                     bytes = mmInStream.read(buffer);
 
                     // Send the obtained bytes to the UI Activity
-                    mHandler.obtainMessage(CorsaActivity.MESSAGE_READ, bytes, -1, buffer)
-                            .sendToTarget();
+                	String dfuMessage = new String(buffer, 0, bytes);
+        			Log.d("DFU", "(read) " + bytes + " " + dfuMessage + " " + mDfuInProgress);
+                    if (mDfuInProgress) {
+                    	parseDfuMessage(dfuMessage);
+                    }
+                    else {
+                        mHandler.obtainMessage(CorsaActivity.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+                    }
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
                     connectionLost();

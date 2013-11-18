@@ -69,5 +69,11 @@
     <string name="info_bt_disconnect">Odpojiť</string>
     <string name="info_disconnection_bt_name">Názov</string>
     <string name="remember_connection">Zapamatať pripojenie</string>
+    <string name="info_version">Verzia systému</string>
+    <string name="choose_file">Zvoliť súbor</string>
+    <string name="info_no_file">Nebol vybraný žiadny súbor</string>
+    <string name="firmware_warning"><b>Varovanie:</b>\nPočas aktualizácie prosím nevypínajte aplikáciu (uvedenie aplikácie na pozadie je v prípade dostatku pamäte možné). V prípade prerušenia spojenia sa uvedie zariadenie do núdzového režimu, v ktorom bude možné firmware dodatočne aktualizovať. Všetky ostatné funkcionality sú v núdzovom režime neprístupné.</string>
+    <string name="firmware_update">Aktualizácia zariadenia</string>
+    <string name="percentage_done">%1d%% hotovo</string>
     
 </resources>

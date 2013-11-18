@@ -49,7 +49,6 @@ public class ModeFragment extends Fragment implements OnClickListener {
     v.findViewById(R.id.btn_mode_solid).setOnClickListener(this);
     v.findViewById(R.id.btn_mode_fade).setOnClickListener(this);
     v.findViewById(R.id.btn_mode_rainbow).setOnClickListener(this);
-    v.findViewById(R.id.btn_upload_firmware).setOnClickListener(this);
 
     RadioGroup door_logic = (RadioGroup)(v.findViewById(R.id.radiogroup_door_logic));
     door_logic.setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -169,9 +168,6 @@ public class ModeFragment extends Fragment implements OnClickListener {
 	  			activity.sendMessage(bos.toString());
 	  		break;
 
-          case R.id.btn_upload_firmware:
-        	  activity.requestFileLocation();
-        	  break;
 	  }
 
   }  
