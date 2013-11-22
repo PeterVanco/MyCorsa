@@ -159,10 +159,13 @@ public class CorsaService extends Service {
 			}
 			else if (mBuffer.startsWith("#RESEND\n")) {
 				mBuffer = mBuffer.substring(mBuffer.indexOf("\n") + 1);
-				Toast.makeText(this, "RESEND", Toast.LENGTH_SHORT).show();
 				Log.d("DFU", "#RESEND");
-				Log.d("DFU", "RESEND call");
 				continueDfu();
+			}
+			else if (mBuffer.startsWith("#CHECK\n")) {
+				mBuffer = mBuffer.substring(mBuffer.indexOf("\n") + 1);
+				Log.d("DFU", "#CHECK-OK");
+				write("#CHECK-OK\n".getBytes());
 			}
 	        else if (mBuffer.startsWith("#DFU-WAIT\n")) {
 	        	mBuffer = mBuffer.substring(mBuffer.indexOf("\n") + 1);

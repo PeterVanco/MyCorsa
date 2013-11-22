@@ -523,7 +523,13 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		    	    .setSmallIcon(R.drawable.ic_launcher)
 					.setProgress(msg.arg1, msg.arg2, false);
 	      		Log.d("DFU", "Progress " + msg.arg1 + " / " + msg.arg2);
-	      		mNotifyManager.notify(0, mBuilder.build()); 	
+	      		mNotifyManager.notify(0, mBuilder.build()); 
+	      		
+	      	    final Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentContentFragmentTag);
+	      	    if (currentFragment instanceof FirmwareFragment) {
+	      	    	((FirmwareFragment)currentFragment).setUpgradeProgress(100 * msg.arg2 / msg.arg1);
+	      	    }
+	      		
         	  break;
           case MESSAGE_DFU_END:
 	      		mBuilder.setContentTitle("Firmware update done")

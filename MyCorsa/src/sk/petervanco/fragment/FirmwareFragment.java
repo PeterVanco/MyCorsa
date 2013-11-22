@@ -135,7 +135,7 @@ public class FirmwareFragment extends Fragment implements OnClickListener {
 		
         case R.id.btn_upload_firmware:
 			ExpandView(getView().findViewById(R.id.upgrade_progress));
-			setUpgradeProgress(25);
+			setUpgradeProgress(0);
 			mActivity.getBindedService().startUpgradeFirmware(mDfuFile);
       	  	break;
 
