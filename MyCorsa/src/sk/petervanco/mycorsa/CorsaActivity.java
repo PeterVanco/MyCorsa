@@ -1,18 +1,3 @@
-/*******************************************************************************
- * Copyright 2012 Steven Rudenko
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *   http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ******************************************************************************/
 package sk.petervanco.mycorsa;
 
 import java.io.File;
@@ -26,6 +11,7 @@ import sk.petervanco.fragment.ConnectionFragment;
 import sk.petervanco.fragment.DisconnectionFragment;
 import sk.petervanco.fragment.FirmwareFragment;
 import sk.petervanco.fragment.ModeFragment;
+import sk.petervanco.fragment.MusicFragment;
 import sk.petervanco.fragment.SandboxFragment;
 import sk.petervanco.fragment.WebViewFragment;
 import android.app.Activity;
@@ -82,7 +68,9 @@ public class CorsaActivity extends FragmentActivity {
   private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
   private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
   private static final int REQUEST_ENABLE_BT = 3;
-  private static final int REQUEST_GET_CONTENT = 4;  
+  public static final int REQUEST_GET_FILE_FIRMWARE = 4;  
+  public static final int REQUEST_GET_FILE_MUSIC = 5;  
+  public static final int REQUEST_GET_FILE_MUSIC_CONTROL = 6;  
   
   // Message types sent from the CorsaService Handler
   public static final int MESSAGE_STATE_CHANGE = 1;
@@ -97,8 +85,6 @@ public class CorsaActivity extends FragmentActivity {
   
   public static final String EXTRA_DEVICE_NAME = "device_name";  
   public static final String EXTRA_DEVICE_ADDRESS = "device_address";
-  private BlockingQueue<String> mMessageQueue = new ArrayBlockingQueue<String>(64);
-
   private ActionsAdapter actionsAdapter;
   private NotificationManager mNotifyManager = null;
   private NotificationCompat.Builder mBuilder = null;
@@ -228,12 +214,12 @@ public void callStartDFU(String filename) {
       mOutStringBuffer = new StringBuffer("");  
   }
   
-  public void requestFileLocation() {
+  public void requestFileLocation(int request) {
 	  Intent target = FileUtils.createGetContentIntent();
 		// Create the chooser Intent
 		Intent intent = Intent.createChooser(target, "Vyberte súbor firmware");
 		try {
-			startActivityForResult(intent, REQUEST_GET_CONTENT);
+			startActivityForResult(intent, request);
 		} catch (ActivityNotFoundException e) {
 			// The reason for the existence of aFileChooser
 		}        	  
@@ -308,7 +294,7 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
       Log.d(TAG, "onActivityResult " + resultCode);
       Log.d(TAG, "onActivityResult request code: " + requestCode);
       switch (requestCode) {
-		case REQUEST_GET_CONTENT:	
+		case REQUEST_GET_FILE_FIRMWARE:	
 			// If the file selection was successful
 			if (resultCode == RESULT_OK) {		
 				if (data != null) {
@@ -330,6 +316,59 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 						}
 						else
 							Log.d(TAG, "Filetype must be a firmware image");
+						//Toast.makeText(this, content, Toast.LENGTH_LONG).show();
+					} catch (Exception e) {
+						Log.e("FileSelectorTestActivity", "File select error", e);
+					}
+				}
+			} 
+		break;
+		case REQUEST_GET_FILE_MUSIC:	
+			// If the file selection was successful
+			if (resultCode == RESULT_OK) {		
+				if (data != null) {
+					// Get the URI of the selected file
+					final Uri uri = data.getData();
+	
+					try {
+						// Create a file instance from the URI
+						final File file = FileUtils.getFile(uri);
+						final String filePath = file.getAbsolutePath();
+						
+						Fragment actualFragment = getSupportFragmentManager().findFragmentByTag(currentContentFragmentTag);
+						if (MusicFragment.class.equals(actualFragment.getClass()))
+						{
+							((MusicFragment) actualFragment).SetMusicFilename(file);
+						}
+						//Toast.makeText(this, content, Toast.LENGTH_LONG).show();
+					} catch (Exception e) {
+						Log.e("FileSelectorTestActivity", "File select error", e);
+					}
+				}
+			} 
+		break;
+		case REQUEST_GET_FILE_MUSIC_CONTROL:	
+			// If the file selection was successful
+			if (resultCode == RESULT_OK) {		
+				if (data != null) {
+					// Get the URI of the selected file
+					final Uri uri = data.getData();
+	
+					try {
+						// Create a file instance from the URI
+						final File file = FileUtils.getFile(uri);
+						final String filePath = file.getAbsolutePath();
+						
+						if (filePath.toLowerCase(Locale.US).endsWith(".mcf"))
+						{
+							Fragment actualFragment = getSupportFragmentManager().findFragmentByTag(currentContentFragmentTag);
+							if (MusicFragment.class.equals(actualFragment.getClass()))
+							{
+								((MusicFragment) actualFragment).SetControlFilename(file);
+							}
+						}
+						else
+							Log.d(TAG, "Filetype must be a music control file");
 						//Toast.makeText(this, content, Toast.LENGTH_LONG).show();
 					} catch (Exception e) {
 						Log.e("FileSelectorTestActivity", "File select error", e);
@@ -431,6 +470,14 @@ public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		  fragment = foundFragment;
 		} else {
 		  fragment = new ModeFragment();
+		}
+    } else if (MusicFragment.MUSIC_URI.equals(uri)) {
+		tag = MusicFragment.TAG;
+		final MusicFragment foundFragment = (MusicFragment) fm.findFragmentByTag(tag);
+		if (foundFragment != null) {
+		  fragment = foundFragment;
+		} else {
+		  fragment = new MusicFragment();
 		}
     } else if (uri != null) {
         tag = WebViewFragment.TAG;

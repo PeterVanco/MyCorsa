@@ -386,6 +386,7 @@ containing a value of this type.
     }
     public static final class id {
         public static final int CheckBox01=0x7f09001c;
+        public static final int TextView01=0x7f090038;
         public static final int actions=0x7f090003;
         public static final int actionsContentView=0x7f090018;
         public static final int actions_width=0x7f090001;
@@ -400,10 +401,12 @@ containing a value of this type.
         public static final int btn_bt_disconnect=0x7f09001b;
         public static final int btn_bt_discover=0x7f090016;
         public static final int btn_choose_file=0x7f090021;
+        public static final int btn_choose_music=0x7f090035;
         public static final int btn_mode_fade=0x7f09002b;
         public static final int btn_mode_rainbow=0x7f09002c;
         public static final int btn_mode_solid=0x7f09002a;
         public static final int btn_upload_firmware=0x7f090023;
+        public static final int choose_control_file=0x7f090037;
         public static final int content=0x7f090004;
         public static final int disconnection_bt_address=0x7f09001a;
         public static final int disconnection_bt_name=0x7f090019;
@@ -419,29 +422,32 @@ containing a value of this type.
         public static final int full=0x7f09000d;
         public static final int image_validity=0x7f090022;
         public static final int info_blink_count=0x7f090032;
+        public static final int music_progress=0x7f09003c;
+        public static final int music_progress_text=0x7f09003b;
         public static final int none=0x7f090002;
-        public static final int prefFadeMaxValue=0x7f090037;
-        public static final int prefFadeMaxValueValue=0x7f090038;
-        public static final int prefFadeType=0x7f090035;
-        public static final int prefFadeTypeValue=0x7f090036;
-        public static final int prefFlingDuration=0x7f090039;
-        public static final int prefFlingDurationValue=0x7f09003a;
-        public static final int prefShadowWidth=0x7f09003d;
-        public static final int prefShadowWidthValue=0x7f09003e;
-        public static final int prefShowShadow=0x7f09003b;
-        public static final int prefShowShadowValue=0x7f09003c;
-        public static final int prefSpacingActionsWidth=0x7f090044;
-        public static final int prefSpacingActionsWidthValue=0x7f090045;
-        public static final int prefSpacingType=0x7f09003f;
-        public static final int prefSpacingTypeValue=0x7f090040;
-        public static final int prefSpacingWidth=0x7f090041;
-        public static final int prefSpacingWidthAdditionalValue=0x7f090042;
-        public static final int prefSpacingWidthValue=0x7f090043;
-        public static final int prefSwipingEdgeWidth=0x7f090048;
-        public static final int prefSwipingEdgeWidthValue=0x7f090049;
-        public static final int prefSwipingType=0x7f090046;
-        public static final int prefSwipingTypeValue=0x7f090047;
-        public static final int progress=0x7f09004b;
+        public static final int play_pause=0x7f09003a;
+        public static final int prefFadeMaxValue=0x7f09003f;
+        public static final int prefFadeMaxValueValue=0x7f090040;
+        public static final int prefFadeType=0x7f09003d;
+        public static final int prefFadeTypeValue=0x7f09003e;
+        public static final int prefFlingDuration=0x7f090041;
+        public static final int prefFlingDurationValue=0x7f090042;
+        public static final int prefShadowWidth=0x7f090045;
+        public static final int prefShadowWidthValue=0x7f090046;
+        public static final int prefShowShadow=0x7f090043;
+        public static final int prefShowShadowValue=0x7f090044;
+        public static final int prefSpacingActionsWidth=0x7f09004c;
+        public static final int prefSpacingActionsWidthValue=0x7f09004d;
+        public static final int prefSpacingType=0x7f090047;
+        public static final int prefSpacingTypeValue=0x7f090048;
+        public static final int prefSpacingWidth=0x7f090049;
+        public static final int prefSpacingWidthAdditionalValue=0x7f09004a;
+        public static final int prefSpacingWidthValue=0x7f09004b;
+        public static final int prefSwipingEdgeWidth=0x7f090050;
+        public static final int prefSwipingEdgeWidthValue=0x7f090051;
+        public static final int prefSwipingType=0x7f09004e;
+        public static final int prefSwipingTypeValue=0x7f09004f;
+        public static final int progress=0x7f090053;
         public static final int radio_2_blinks=0x7f090033;
         public static final int radio_3_blinks=0x7f090034;
         public static final int radio_disable_door_logic=0x7f090030;
@@ -456,11 +462,13 @@ containing a value of this type.
         public static final int solid_svbar=0x7f090029;
         public static final int system_version=0x7f09001f;
         public static final int textView2=0x7f090020;
+        public static final int text_music_file=0x7f090036;
+        public static final int text_musiccontrol_file=0x7f090039;
         public static final int thumbnail=0x7f09000f;
         public static final int upgrade_percentage=0x7f090026;
         public static final int upgrade_percentage_bar=0x7f090025;
         public static final int upgrade_progress=0x7f090024;
-        public static final int webview=0x7f09004a;
+        public static final int webview=0x7f090052;
     }
     public static final class integer {
         public static final int default_actionscontentview_fade_max_value=0x7f0a0000;
@@ -484,13 +492,14 @@ containing a value of this type.
         public static final int file=0x7f030009;
         public static final int firmware=0x7f03000a;
         public static final int mode=0x7f03000b;
-        public static final int pref_fade=0x7f03000c;
-        public static final int pref_other=0x7f03000d;
-        public static final int pref_shadow=0x7f03000e;
-        public static final int pref_spacing=0x7f03000f;
-        public static final int pref_swiping=0x7f030010;
-        public static final int sandbox=0x7f030011;
-        public static final int webview=0x7f030012;
+        public static final int music=0x7f03000c;
+        public static final int pref_fade=0x7f03000d;
+        public static final int pref_other=0x7f03000e;
+        public static final int pref_shadow=0x7f03000f;
+        public static final int pref_spacing=0x7f030010;
+        public static final int pref_swiping=0x7f030011;
+        public static final int sandbox=0x7f030012;
+        public static final int webview=0x7f030013;
     }
     public static final class string {
         public static final int action_about=0x7f070026;
@@ -505,6 +514,8 @@ containing a value of this type.
         public static final int bt_connect=0x7f070037;
         public static final int bt_discover=0x7f070034;
         public static final int choose_file=0x7f070002;
+        public static final int choose_music_file=0x7f07004a;
+        public static final int choose_musiccontrol_file=0x7f07004b;
         public static final int corsa_image=0x7f070033;
         public static final int device=0x7f070035;
         public static final int effect_alpha=0x7f07002d;
@@ -554,6 +565,7 @@ containing a value of this type.
         public static final int mode_title=0x7f070012;
         public static final int no_device=0x7f07000f;
         public static final int percentage_done=0x7f070049;
+        public static final int play=0x7f07004c;
         public static final int pref_fade=0x7f07001d;
         public static final int pref_fade_max_value=0x7f07001f;
         public static final int pref_fade_type=0x7f07001e;

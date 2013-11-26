@@ -43,7 +43,7 @@ public class FirmwareFragment extends Fragment implements OnClickListener {
 	    v.findViewById(R.id.btn_choose_file).setOnClickListener(this);
 	    v.findViewById(R.id.btn_upload_firmware).setOnClickListener(this);
 
-	    mInfoFilename = (TextView) v.findViewById(R.id.file_name);
+	    mInfoFilename = (TextView) v.findViewById(R.id.text_music_file);
 
 	    
 	    return v;
@@ -140,7 +140,7 @@ public class FirmwareFragment extends Fragment implements OnClickListener {
       	  	break;
 
         case R.id.btn_choose_file:
-        	mActivity.requestFileLocation();
+        	mActivity.requestFileLocation(CorsaActivity.REQUEST_GET_FILE_FIRMWARE);
         	break;
 
 		default:
