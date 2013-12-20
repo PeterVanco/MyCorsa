@@ -10,7 +10,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.UUID;
 
-import android.app.NotificationManager;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -21,9 +20,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.support.v4.app.NotificationCompat;
+import android.os.SystemClock;
 import android.util.Log;
-import android.widget.Toast;
 
 public class CorsaService extends Service {
 
@@ -48,6 +46,7 @@ public class CorsaService extends Service {
     private String[] mHexRecords;
     private int mHexRecordsPtr = 0;
     private String mBuffer = "";
+	private String mMCSBuffer = "";
 
     private Boolean mMCSInProgress = false;
 	private String[] mMCSRecords;
@@ -147,9 +146,6 @@ public class CorsaService extends Service {
         }
     };
 
-	private String mMCSBuffer;
-
-	
 	private synchronized void parseDfuMessage(String s) {
         
 		mBuffer += s;
@@ -249,9 +245,8 @@ public class CorsaService extends Service {
 		{
 			Log.d("MCS", "(rec) " + mMCSBuffer);
 
-			if (mMCSBuffer.startsWith("#NEXT\n")) {
+			if (mMCSBuffer.startsWith("#MCS-NEXT\n")) {
 				mMCSBuffer = mMCSBuffer.substring(mMCSBuffer.indexOf("\n") + 1);
-				mMCSRecordsPtr += 100;
 				Log.d("DFU", "NEXT call");
 				continueMCS();
 			}
@@ -274,7 +269,7 @@ public class CorsaService extends Service {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			for (i = 0; i < 100; i++) {
+			for (i = 0; i < 10; i++) {
 				
 				String[] record = mMCSRecords[mMCSRecordsPtr + i].split(",");
 				int milis = Integer.parseInt(record[0]);
@@ -283,31 +278,34 @@ public class CorsaService extends Service {
 				feed.write(milis & 0xff);
 				feed.write(intensity);
 				if (mMCSRecordsPtr + i + 1 == mMCSRecords.length) {
-					try {
-						feed.write("\n#MCS-EOF".getBytes());
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+//					try {
+//						feed.write("\n#MCS-EOF".getBytes());
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
 					break;
 				}
 			}
-			feed.write(0x10);
+			feed.write(0x0A);
 			Log.d("MCS", "Sending: " + feed.toString());
-			
+			mMCSRecordsPtr += i;
 			write(feed.toByteArray());		
 		}    	
     }
     
 	public synchronized void prepareMCS(String controlFile) {
 		try {
+			write("#MCS-STOP\n".getBytes());
 			Log.d("MCS", "Opening control file: " + controlFile);
 			String control = getStringFromFile(controlFile);
 			mMCSRecords = control.split("\n");
 			mMCSRecordsPtr = 0;
 			mMCSInProgress = true;		
 			Log.d("MCS", "Got " + mMCSRecords.length + " mcs records");
+			SystemClock.sleep(1000);
 			continueMCS();
-		
+			SystemClock.sleep(1000);
+			continueMCS();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -553,7 +551,7 @@ public class CorsaService extends Service {
 
                     // Send the obtained bytes to the UI Activity
                 	String dfuMessage = new String(buffer, 0, bytes);
-        			Log.d("DFU", "(read) " + bytes + " " + dfuMessage + " " + mDfuInProgress);
+        			Log.d("RX", "(read) " + bytes + " " + dfuMessage + " " + mDfuInProgress);
                     if (mDfuInProgress) {
                     	parseDfuMessage(dfuMessage);
                     }

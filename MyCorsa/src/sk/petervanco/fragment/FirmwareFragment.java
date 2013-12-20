@@ -43,7 +43,7 @@ public class FirmwareFragment extends Fragment implements OnClickListener {
 	    v.findViewById(R.id.btn_choose_file).setOnClickListener(this);
 	    v.findViewById(R.id.btn_upload_firmware).setOnClickListener(this);
 
-	    mInfoFilename = (TextView) v.findViewById(R.id.text_music_file);
+	    mInfoFilename = (TextView) v.findViewById(R.id.file_name);
 
 	    
 	    return v;

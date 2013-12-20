@@ -116,13 +116,22 @@ public class ModeFragment extends Fragment implements OnClickListener {
     mSolidColor.addSVBar((SVBar) v.findViewById(R.id.solid_svbar));
     mSolidColor.setOnColorChangedListener(new OnColorChangedListener() {
 		
+		private String mLastColorSent;
+
 		@Override
-		public void onColorChanged(int color) {
+		public synchronized void onColorChanged(int color) {
 			
+
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			bos.write((int)'0' + Color.red(color) / (0xff / 9));
 			bos.write((int)'0' + Color.green(color) / (0xff / 9));
 			bos.write((int)'0' + Color.blue(color) / (0xff / 9));
+
+			Log.d("COLOR", mLastColorSent + " - " + bos.toString());
+			if (bos.toString().equals(mLastColorSent))
+				return;
+			mLastColorSent = bos.toString();
+
 			bos.write('\n');
 			Log.d(TAG, bos.toString());
 			activity.sendMessage(bos.toString());
